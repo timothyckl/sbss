@@ -28,8 +28,10 @@ class SimilarityStratifiedSplit:
     permutation = np.random.permutation(len(X))
     shuffled_x = X[permutation]
     shuffled_y = y[permutation]
+    
+    self.shuffled_dataset = (shuffled_x, shuffled_y)
 
-    return shuffled_x, shuffled_y
+    return self.shuffled_dataset
 
   def _validate(self, class_counts, min_samples_per_class):
     """
@@ -64,7 +66,6 @@ class SimilarityStratifiedSplit:
     """
     if self.shuffle:
       X, y = self._shuffle_dataset(X, y)
-      self.shuffled_dataset = (X, y)
 
     num_classes = self._encode_labels(y)
 
