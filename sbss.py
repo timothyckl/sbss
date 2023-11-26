@@ -2,6 +2,9 @@
 todo: document algorithm
 """
 
+import warnings
+import numpy as np
+
 class SimilarityStratifiedSplit:
   """
   todo: document
