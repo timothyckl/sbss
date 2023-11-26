@@ -1,4 +1,11 @@
+"""
+todo: document algorithm
+"""
+
 class SimilarityStratifiedSplit:
+  """
+  todo: document
+  """
   def __init__(self, n_splits, sim_func, shuffle=False):
     self.n_splits = n_splits
     self.sim_func = sim_func
@@ -9,9 +16,15 @@ class SimilarityStratifiedSplit:
     return f"SimilarityStratifiedSplit(n_splits={self.n_splits}, sim_func={self.sim_func}, shuffle={self.shuffle})"
 
   def get_n_splits(self):
+    """
+    todo: document
+    """
     return self.n_splits
 
   def _shuffle_dataset(self, X, y):
+    """
+    todo: document
+    """
     permutation = np.random.permutation(len(X))
     shuffled_x = X[permutation]
     shuffled_y = y[permutation]
@@ -19,6 +32,9 @@ class SimilarityStratifiedSplit:
     return shuffled_x, shuffled_y
 
   def _validate(self, class_counts, min_samples_per_class):
+    """
+    todo: document
+    """
     if np.all(self.n_splits > class_counts):
         raise ValueError("Number of folds cannot be greater than the number of members in each class.")
 
@@ -27,6 +43,9 @@ class SimilarityStratifiedSplit:
                       f"which is less than the specified number of folds: {self.n_splits}")
 
   def _encode_labels(self, y):
+    """
+    todo: document
+    """
     _, labels_idx, labels_inverse = np.unique(y, return_index=True, return_inverse=True)
     _, class_permutation = np.unique(labels_idx, return_inverse=True)
     encoded_labels = class_permutation[labels_inverse]
@@ -40,6 +59,9 @@ class SimilarityStratifiedSplit:
     return num_classes
 
   def split(self, X, y):
+    """
+    todo: document
+    """
     if self.shuffle:
       X, y = self._shuffle_dataset(X, y)
       self.shuffled_dataset = (X, y)
