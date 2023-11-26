@@ -71,10 +71,6 @@ class SimilarityStratifiedSplit:
       X, y = self._shuffle_dataset(X, y)
 
     num_classes = self._encode_labels(y)
-
-    train_idx = None
-    test_idx = None
-
     distances = self.sim_func(X)
 
     used_indices = np.zeros(len(y)).astype(bool)
