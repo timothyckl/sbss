@@ -1,6 +1,7 @@
 import warnings
 import numpy as np
-# from typing import
+from typing import Callable
+from numpy.typing import NDArray
 
 class SimilarityStratifiedSplit():
   """
@@ -19,17 +20,17 @@ class SimilarityStratifiedSplit():
   shuffle : bool, default=False
       Whether to shuffle the dataset before splitting.
   """
-  def __init__(self, n_splits, sim_func, shuffle=False):
+  def __init__(self, n_splits: int, sim_func: Callable, shuffle: bool = False) -> None:
     self.n_splits = n_splits
     self.sim_func = sim_func
     self.shuffle = shuffle
     self.shuffled_dataset = None
 
-  def get_n_splits(self):
+  def get_n_splits(self) -> int:
     """Returns the number of splitting iterations for cross-validation"""
     return self.n_splits
 
-  def _shuffle_dataset(self, X, y):
+  def _shuffle_dataset(self, X: NDArray , y: NDArray) -> tuple[NDArray, NDArray]:
     """
     Shuffles the input features and corresponding labels using a random permutation.
     
@@ -53,7 +54,7 @@ class SimilarityStratifiedSplit():
 
     return self.shuffled_dataset
 
-  def _validate(self, class_counts, min_samples_per_class):
+  def _validate(self, class_counts: NDArray, min_samples_per_class: int):
     """
     Validates parameters for stratified splitting.
 
@@ -78,7 +79,7 @@ class SimilarityStratifiedSplit():
         warnings.warn(f"The least populated class in labels has only {min_samples_per_class} members, "
                       f"which is less than the specified number of folds: {self.n_splits}")
 
-  def _encode_labels(self, y):
+  def _encode_labels(self, y: NDArray) -> int:
     """
     Encodes the labels in 'y' based on lexicographic order, ensuring classes are encoded by order of appearance.
     It calculates the number of unique classes, the count of samples per class, and validates the encoded classes' distribution.
@@ -105,7 +106,7 @@ class SimilarityStratifiedSplit():
 
     return num_classes
 
-  def split(self, X, y):
+  def split(self, X: NDArray, y: NDArray):
     """
     Generate indices to split data into training and test set.
 
@@ -120,10 +121,10 @@ class SimilarityStratifiedSplit():
 
     Yields
     ------
-    train : ndarray
+    train_indices : ndarray
       The training set indices for that split.
 
-    test : ndarray
+    test_indices : ndarray
           The testing set indices for that split.
     """
     if self.shuffle:
