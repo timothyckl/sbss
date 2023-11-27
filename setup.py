@@ -24,5 +24,5 @@ setup(
     extra_require={
         "dev": ["pytest==7.4.3"]
     },
-    python_require=">=3"
+    python_require=">=3.0"
 )
