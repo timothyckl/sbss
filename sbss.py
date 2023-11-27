@@ -1,44 +1,73 @@
-"""
-todo: document algorithm
-"""
-
 import warnings
 import numpy as np
 
-class SimilarityStratifiedSplit:
+class SimilarityStratifiedSplit(BaseSplitter):
   """
-  todo: document
+  SBSS (Similarity Based Stratified Splitting: https://arxiv.org/abs/2010.06099) considers both input and output space to create 
+  splits, unlike conventional stratified methods that focus solely on output distribution. By grouping similar samples within the 
+  same label into separate splits, SBSS ensures balanced partitions covering diverse dataset regions while maintaining approximately 
+  equal input and output distribution across all splits.
+
+  Parameters
+  ----------
+  n_splits : int
+      Number of splits to generate.
+  sim_func : callable
+      Function to compute similarity between samples.
+  shuffle : bool, default=False
+      Whether to shuffle the dataset before splitting.
   """
   def __init__(self, n_splits, sim_func, shuffle=False):
     self.n_splits = n_splits
     self.sim_func = sim_func
     self.shuffle = shuffle
-    self.shuffled_dataset = None  # used to store shuffled dataset for interaction after split operation
-
-  def __str__(self):
-    return f"SimilarityStratifiedSplit(n_splits={self.n_splits}, sim_func={self.sim_func}, shuffle={self.shuffle})"
+    self.shuffled_dataset = None
 
   def get_n_splits(self):
-    """
-    todo: document
-    """
+    """Returns the number of splitting iterations for cross-validation"""
     return self.n_splits
 
   def _shuffle_dataset(self, X, y):
     """
-    todo: document
+    Shuffles the input features and corresponding labels using a random permutation.
+    
+    Parameters
+    ----------
+    X : array-like
+        Input features.
+    y : array-like
+        Corresponding labels.
+        
+    Returns
+    ----------
+    tuple
+        A tuple containing shuffled input features and labels.
     """
     permutation = np.random.permutation(len(X))
     shuffled_x = X[permutation]
     shuffled_y = y[permutation]
-    
+
     self.shuffled_dataset = (shuffled_x, shuffled_y)
 
     return self.shuffled_dataset
 
   def _validate(self, class_counts, min_samples_per_class):
     """
-    todo: document
+    Validates parameters for stratified splitting.
+
+    Parameters
+    ----------
+    class_counts : array-like
+        Number of samples for each class.
+    min_samples_per_class : int
+        Minimum number of samples per class.
+
+    Raises
+    ----------
+    ValueError
+        If the number of folds is greater than the number of members in each class.
+    Warning
+        If the least populated class has fewer samples than the specified number of folds.
     """
     if np.all(self.n_splits > class_counts):
         raise ValueError("Number of folds cannot be greater than the number of members in each class.")
@@ -49,7 +78,18 @@ class SimilarityStratifiedSplit:
 
   def _encode_labels(self, y):
     """
-    todo: document
+    Encodes the labels in 'y' based on lexicographic order, ensuring classes are encoded by order of appearance.
+    It calculates the number of unique classes, the count of samples per class, and validates the encoded classes' distribution.
+
+    Parameters
+    ----------
+    y : array-like of shape (n_samples,)
+        Target labels to be encoded.
+        
+    Returns
+    ----------
+    num_classes: int
+                 The number of unique classes in 'y' after encoding.
     """
     _, labels_idx, labels_inverse = np.unique(y, return_index=True, return_inverse=True)
     _, class_permutation = np.unique(labels_idx, return_inverse=True)
@@ -65,7 +105,24 @@ class SimilarityStratifiedSplit:
 
   def split(self, X, y):
     """
-    todo: document
+    Generate indices to split data into training and test set.
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        Training data, where `n_samples` is the number of samples
+        and `n_features` is the number of features.
+
+    y : array-like of shape (n_samples,)
+        The target variable for supervised learning problems.
+
+    Yields
+    ------
+    train : ndarray
+      The training set indices for that split.
+
+    test : ndarray
+          The testing set indices for that split.
     """
     if self.shuffle:
       X, y = self._shuffle_dataset(X, y)
