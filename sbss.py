@@ -94,6 +94,7 @@ class SimilarityStratifiedSplit():
     num_classes: int
                  The number of unique classes in 'y' after encoding.
     """
+    # Default checking from scikitlearn kfold
     _, labels_idx, labels_inverse = np.unique(y, return_index=True, return_inverse=True)
     _, class_permutation = np.unique(labels_idx, return_inverse=True)
     encoded_labels = class_permutation[labels_inverse]
@@ -133,24 +134,30 @@ class SimilarityStratifiedSplit():
     num_classes = self._encode_labels(y)
     distances = self.sim_func(X)
 
-    used_indices = np.zeros(len(y)).astype(bool)
+    # boolean array to track used sample indices
+    used_indices = np.zeros(len(y)).astype(bool)  
     folds_list = [[] for _ in range(self.n_splits)]
     fold_label_column = []
 
     for class_label in range(num_classes):
-      class_indices = y.squeeze() == class_label
+      # get indices for current class
+      class_indices = y.squeeze() == class_label  
       samples_to_split = class_indices.sum()
 
+      # iterate while there are enough samples in the class to split into folds
       while samples_to_split >= self.n_splits:
+        # identify unused samples in current class
+        # and get pivot sample
         considered_indices = (~used_indices) & class_indices
-
         sum_distances = np.sum(distances[:, considered_indices], axis=1)
         sum_distances[~considered_indices] = np.inf
+        # smallest distance sum is chosen to be pivot sample
         pivot_idx = np.argpartition(sum_distances, 0)[0]
 
         used_indices[pivot_idx] = True
         nearby_samples = [pivot_idx]
 
+        # find N-1 similar samples
         for fold_idx in range(1, self.n_splits):
           sum_distances = np.sum(distances[:, nearby_samples], axis=1)
           sum_distances[~considered_indices] = np.inf
@@ -158,16 +165,19 @@ class SimilarityStratifiedSplit():
 
           closest_sample_idx = np.argpartition(sum_distances, 0)[0]
           nearby_samples.append(closest_sample_idx)
-
+          
+          # mark index in mask arrays as used and considered
           used_indices[closest_sample_idx] = True
           considered_indices[closest_sample_idx] = False
 
         fold_label_column.append(class_label)
-        np.random.shuffle(nearby_samples)
+        # shuffle for stochasticity when appending to splits
+        np.random.shuffle(nearby_samples)  
 
         for fold_idx in range(self.n_splits):
           folds_list[fold_idx].append(nearby_samples[fold_idx])
 
+        # decrement samples_to_split after filling folds
         samples_to_split -= self.n_splits
 
     folds = np.array(folds_list)
