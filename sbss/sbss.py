@@ -3,7 +3,7 @@ import numpy as np
 from typing import Callable
 from numpy.typing import NDArray
 
-class SimilarityStratifiedSplit():
+class SimilarityStratifiedSplit:
   """
   SBSS (Similarity Based Stratified Splitting: https://arxiv.org/abs/2010.06099) considers both 
   input and output space to create splits, unlike conventional stratified methods that focus solely 
@@ -17,43 +17,15 @@ class SimilarityStratifiedSplit():
       Number of splits to generate.
   sim_func : callable
       Function to compute similarity between samples.
-  shuffle : bool, default=False
-      Whether to shuffle the dataset before splitting.
   """
-  def __init__(self, n_splits: int, sim_func: Callable, shuffle: bool = False) -> None:
+  def __init__(self, n_splits: int, sim_func: Callable) -> None:
     self.n_splits = n_splits
     self.sim_func = sim_func
-    self.shuffle = shuffle
-    self.shuffled_dataset = None
 
   def get_n_splits(self) -> int:
     """Returns the number of splitting iterations for cross-validation"""
     return self.n_splits
-
-  def _shuffle_dataset(self, X: NDArray , y: NDArray) -> tuple[NDArray, NDArray]:
-    """
-    Shuffles the input features and corresponding labels using a random permutation.
-    
-    Parameters
-    ----------
-    X : array-like
-        Input features.
-    y : array-like
-        Corresponding labels.
-        
-    Returns
-    ----------
-    tuple
-        A tuple containing shuffled input features and labels.
-    """
-    permutation = np.random.permutation(len(X))
-    shuffled_x = X[permutation]
-    shuffled_y = y[permutation]
-
-    self.shuffled_dataset = (shuffled_x, shuffled_y)
-
-    return self.shuffled_dataset
-
+  
   def _validate(self, class_counts: NDArray, min_samples_per_class: int):
     """
     Validates parameters for stratified splitting.
@@ -128,9 +100,6 @@ class SimilarityStratifiedSplit():
     test_indices : ndarray
           The testing set indices for that split.
     """
-    if self.shuffle:
-      X, y = self._shuffle_dataset(X, y)
-
     num_classes = self._encode_labels(y)
     distances = self.sim_func(X)
 
