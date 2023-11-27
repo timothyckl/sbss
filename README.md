@@ -4,14 +4,14 @@ Implementation of the Similarity-Based Stratified Splitting algorithm described 
 
 ## Overview
 
-WIP
+The authors propose a Similarity-Based Stratified Splitting (SBSS) technique, which uses both the output and input space information to split a dataset. Splits are generated using similarity functions among samples to place similar samples in different splits. This approach allows for a better representation of the data in the training phase. This strategy leads to a more realistic performance estimation when used in real-world applications.
 
 ## Install
 
-**PyPI**
+<!-- **PyPI**
 ```bash
 pip install sbss
-```
+``` -->
 
 **Local**
 
@@ -39,7 +39,7 @@ y = np.random.randint(0, 1000, (20,))
 n_splits = 3
 s = SimilarityStratifiedSplit(n_splits, get_distances)
 
-for train_index, test_index in s.split(data, labels):
+for train_index, test_index in s.split(X, y):
   print(f"Train indices: {train_index}\nTest indices: {test_index}")
   print("="*100)
 ```
