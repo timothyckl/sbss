@@ -1,7 +1,8 @@
 import warnings
 import numpy as np
+# from typing import
 
-class SimilarityStratifiedSplit(BaseSplitter):
+class SimilarityStratifiedSplit():
   """
   SBSS (Similarity Based Stratified Splitting: https://arxiv.org/abs/2010.06099) considers both input and output space to create 
   splits, unlike conventional stratified methods that focus solely on output distribution. By grouping similar samples within the 
