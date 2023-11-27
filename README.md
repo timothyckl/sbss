@@ -34,7 +34,7 @@ def get_distances(x):
 
 # inputs are recommended to be normalized
 X = np.random.rand(1000, 128)
-y = np.random.randint(0, 1000, (20,))
+y = np.random.randint(0, 10, (1000,))
 
 n_splits = 3
 s = SimilarityStratifiedSplit(n_splits, get_distances)
