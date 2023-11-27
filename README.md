@@ -8,12 +8,13 @@ WIP
 
 ## Install
 
-PyPI
+**PyPI**
 ```bash
 pip install sbss
 ```
 
-Local install
+**Local**
+
 ```
 git clone https://github.com/timothyckl/similarity-stratified-split.git
 cd ./similarity-stratified-split
@@ -23,6 +24,7 @@ pip install -e .
 ## Usage
 
 ```python
+import numpy as np
 from scipy.spatial import distance
 from sbss import SimilarityStratifiedSplit
 
