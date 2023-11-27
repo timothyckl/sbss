@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: sbss
+Version: 0.0.1
+Summary: Similarity-Based Stratified Splitting Algorithm
+Home-page: https://github.com/timothyckl/similarity-stratified-split
+Author: timothyckl
+Author-email: timothy.ckl@outlook.com
+License: UNKNOWN
+Platform: UNKNOWN
+Description-Content-Type: text/x-rst
+
+# Similarity Stratified Split
+
+Implementation of the Similarity-Based Stratified Splitting algorithm described in [Similarity Based Stratified Splitting: an approach to train better classifiers](https://arxiv.org/abs/2010.06099).
+
+
