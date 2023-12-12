@@ -5,7 +5,7 @@ Summary: Similarity-Based Stratified Splitting Algorithm
 Home-page: https://github.com/timothyckl/similarity-stratified-split
 Author: timothyckl
 Author-email: timothy.ckl@outlook.com
-Classifier: License :: ...
+Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Operating System :: OS Independent
 Description-Content-Type: text/x-rst
