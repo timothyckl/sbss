@@ -10,7 +10,7 @@ setup(
     package_dir={"": "sbss"},
     packages=find_packages(where="sbss"),
     long_description=long_desc,
-    long_description_content_type='text/x-rst',
+    long_description_content_type='text/markdown',
     url="https://github.com/timothyckl/similarity-stratified-split",
     author="timothyckl",
     author_email="timothy.ckl@outlook.com",
