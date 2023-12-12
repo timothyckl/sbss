@@ -1,3 +1,4 @@
+LICENSE
 README.md
 setup.py
 sbss/sbss.egg-info/PKG-INFO
@@ -5,3 +6,4 @@ sbss/sbss.egg-info/SOURCES.txt
 sbss/sbss.egg-info/dependency_links.txt
 sbss/sbss.egg-info/requires.txt
 sbss/sbss.egg-info/top_level.txt
+tests/test_sbss.py

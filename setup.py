@@ -14,15 +14,15 @@ setup(
     url="https://github.com/timothyckl/similarity-stratified-split",
     author="timothyckl",
     author_email="timothy.ckl@outlook.com",
-    # license="",
-    # classifiers=[
-    #     "License :: ...",
-    #     "Programming Language :: Python :: 3.10",
-    #     "Operating System :: OS Independent"
-    # ],
+    license="",
+    classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3.9",
+        "Operating System :: OS Independent"
+    ],
     install_requires=["numpy==1.23.5"],
     extra_require={
         "dev": ["pytest==7.4.3"]
     },
-    python_require=">=3.0"
+    python_require=">=3.9"
 )

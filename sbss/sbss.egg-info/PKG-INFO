@@ -5,9 +5,11 @@ Summary: Similarity-Based Stratified Splitting Algorithm
 Home-page: https://github.com/timothyckl/similarity-stratified-split
 Author: timothyckl
 Author-email: timothy.ckl@outlook.com
-License: UNKNOWN
-Platform: UNKNOWN
+Classifier: License :: ...
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Operating System :: OS Independent
 Description-Content-Type: text/x-rst
+License-File: LICENSE
 
 # Similarity Stratified Split
 
@@ -58,5 +60,3 @@ for train_index, test_index in s.split(X, y):
 ## References
 
 - Farias, F., Ludermir, T. and Bastos-Filho, C. (2020) Similarity based stratified splitting: An approach to train better classifiers, arXiv.org. Available at: https://arxiv.org/abs/2010.06099 (Accessed: 27 November 2023). 
-
-
