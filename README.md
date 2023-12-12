@@ -8,10 +8,10 @@ The authors propose a Similarity-Based Stratified Splitting (SBSS) technique, wh
 
 ## Install
 
-<!-- **PyPI**
+**PyPI**
 ```bash
 pip install sbss
-``` -->
+```
 
 **Local**
 
