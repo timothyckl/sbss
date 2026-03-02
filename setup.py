@@ -22,7 +22,7 @@ setup(
     ],
     install_requires=["numpy>=1.23.5"],
     extras_require={
-        "dev": ["pytest==7.4.3"]
+        "dev": ["pytest==7.4.3", "scipy"]
     },
     python_requires=">=3.9"
 )
