@@ -5,7 +5,7 @@ with open("./README.md", "r") as f:
 
 setup(
     name="sbss",
-    version="0.0.2",
+    version="0.0.3",
     description="Similarity-Based Stratified Splitting Algorithm",
     package_dir={"": "sbss"},
     packages=find_packages(where="sbss"),
