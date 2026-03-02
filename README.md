@@ -37,7 +37,7 @@ X = np.random.rand(1000, 128)
 y = np.random.randint(0, 10, (1000,))
 
 n_splits = 3
-s = SimilarityStratifiedSplit(n_splits, get_distances)
+s = SimilarityStratifiedSplit(n_splits, dist_func=get_distances)
 
 for train_index, test_index in s.split(X, y):
   print(f"Train indices: {train_index}\nTest indices: {test_index}")
