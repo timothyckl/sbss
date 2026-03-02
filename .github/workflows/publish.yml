@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -44,27 +44,27 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Bump patch version in setup.py
+      - name: Bump patch version in pyproject.toml
         id: bump
         run: |
           python - <<'EOF'
           import re
 
-          path = "setup.py"
+          path = "pyproject.toml"
           content = open(path).read()
 
           # extract current version components
-          m = re.search(r'version="(\d+)\.(\d+)\.(\d+)"', content)
+          m = re.search(r'version = "(\d+)\.(\d+)\.(\d+)"', content)
           if not m:
-              raise SystemExit("could not find version string in setup.py")
+              raise SystemExit("could not find version string in pyproject.toml")
 
           major, minor, patch = m.groups()
           new_version = f"{major}.{minor}.{int(patch) + 1}"
 
           # write bumped version back to file
           updated = re.sub(
-              r'version="\d+\.\d+\.\d+"',
-              f'version="{new_version}"',
+              r'version = "\d+\.\d+\.\d+"',
+              f'version = "{new_version}"',
               content,
           )
           open(path, "w").write(updated)
@@ -74,7 +74,7 @@ jobs:
           # capture new version for later steps
           python -c "
           import re
-          m = re.search(r'version=\"(\d+\.\d+\.\d+)\"', open('setup.py').read())
+          m = re.search(r'version = \"(\d+\.\d+\.\d+)\"', open('pyproject.toml').read())
           print('new_version=' + m.group(1))
           " >> $GITHUB_OUTPUT
 
@@ -82,7 +82,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add setup.py
+          git add pyproject.toml
           git commit -m "Bump version to ${{ steps.bump.outputs.new_version }} [skip ci]"
           git push
 

@@ -1,0 +1,19 @@
+# python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# build artefacts
+dist/
+build/
+*.egg-info/
+*.egg
+*.whl
+
+# test cache
+.pytest_cache/
+
+# env
+.env
+.venv/
+venv/
