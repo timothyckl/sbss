@@ -5,27 +5,30 @@ from numpy.typing import NDArray
 
 class SimilarityStratifiedSplit:
   """
-  SBSS (Similarity Based Stratified Splitting: https://arxiv.org/abs/2010.06099) considers both 
-  input and output space to create splits, unlike conventional stratified methods that focus solely 
-  on output distribution. By grouping similar samples within the same label into separate splits, 
-  SBSS ensures balanced partitions covering diverse dataset regions while maintaining approximately 
+  SBSS (Similarity Based Stratified Splitting: https://arxiv.org/abs/2010.06099) considers both
+  input and output space to create splits, unlike conventional stratified methods that focus solely
+  on output distribution. By grouping similar samples within the same label into separate splits,
+  SBSS ensures balanced partitions covering diverse dataset regions while maintaining approximately
   equal input and output distribution across all splits.
 
   Parameters
   ----------
   n_splits : int
       Number of splits to generate.
-  sim_func : callable
-      Function to compute similarity between samples.
+  dist_func : callable
+      Function to compute distances between samples.
+  shuffle : bool, optional
+      Whether to shuffle the dataset before splitting. Default is False.
   """
-  def __init__(self, n_splits: int, sim_func: Callable) -> None:
+  def __init__(self, n_splits: int, dist_func: Callable, shuffle: bool = False) -> None:
     self.n_splits = n_splits
-    self.sim_func = sim_func
+    self.dist_func = dist_func
+    self.shuffle = shuffle
 
   def get_n_splits(self) -> int:
     """Returns the number of splitting iterations for cross-validation"""
     return self.n_splits
-  
+
   def _validate(self, class_counts: NDArray, min_samples_per_class: int):
     """
     Validates parameters for stratified splitting.
@@ -40,33 +43,36 @@ class SimilarityStratifiedSplit:
     Raises
     ----------
     ValueError
-        If the number of folds is greater than the number of members in each class.
+        If the number of folds is greater than the number of members in any class.
     Warning
         If the least populated class has fewer samples than the specified number of folds.
     """
-    if np.all(self.n_splits > class_counts):
+    if np.any(self.n_splits > class_counts):
         raise ValueError("Number of folds cannot be greater than the number of members in each class.")
 
     if self.n_splits > min_samples_per_class:
         warnings.warn(f"The least populated class in labels has only {min_samples_per_class} members, "
                       f"which is less than the specified number of folds: {self.n_splits}")
 
-  def _encode_labels(self, y: NDArray) -> int:
+  def _encode_labels(self, y: NDArray) -> tuple[int, NDArray]:
     """
-    Encodes the labels in 'y' based on lexicographic order, ensuring classes are encoded by order of appearance.
-    It calculates the number of unique classes, the count of samples per class, and validates the encoded classes' distribution.
+    Encodes the labels in 'y' ensuring classes are indexed by order of first appearance.
+    It calculates the number of unique classes, the count of samples per class, and validates
+    the encoded classes' distribution.
 
     Parameters
     ----------
     y : array-like of shape (n_samples,)
         Target labels to be encoded.
-        
+
     Returns
     ----------
-    num_classes: int
-                 The number of unique classes in 'y' after encoding.
+    num_classes : int
+        The number of unique classes in 'y' after encoding.
+    encoded_labels : NDArray
+        The encoded labels array with classes indexed by order of first appearance.
     """
-    # Default checking from scikitlearn kfold
+    # default checking from scikitlearn kfold
     _, labels_idx, labels_inverse = np.unique(y, return_index=True, return_inverse=True)
     _, class_permutation = np.unique(labels_idx, return_inverse=True)
     encoded_labels = class_permutation[labels_inverse]
@@ -77,7 +83,29 @@ class SimilarityStratifiedSplit:
 
     self._validate(class_counts, min_samples_per_class)
 
-    return num_classes
+    return num_classes, encoded_labels
+
+  def _shuffle_dataset(self, X: NDArray, y: NDArray) -> tuple[NDArray, NDArray]:
+    """
+    Shuffles the dataset by applying a random permutation to both X and y.
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        Input features.
+    y : array-like of shape (n_samples,)
+        Target labels.
+
+    Returns
+    ----------
+    X_shuffled : NDArray
+        Shuffled input features.
+    y_shuffled : NDArray
+        Shuffled target labels.
+    """
+    # generate a single permutation and apply it consistently to both arrays
+    permutation = np.random.permutation(len(y))
+    return X[permutation], y[permutation]
 
   def split(self, X: NDArray, y: NDArray):
     """
@@ -100,48 +128,51 @@ class SimilarityStratifiedSplit:
     test_indices : ndarray
           The testing set indices for that split.
     """
-    num_classes = self._encode_labels(y)
-    distances = self.sim_func(X)
+    # shuffle dataset before processing if requested
+    if self.shuffle is True:
+      X, y = self._shuffle_dataset(X, y)
+
+    num_classes, encoded_labels = self._encode_labels(y)
+    distances = self.dist_func(X)
 
     # boolean array to track used sample indices
-    used_indices = np.zeros(len(y)).astype(bool)  
+    used_indices = np.zeros(len(y)).astype(bool)
     folds_list = [[] for _ in range(self.n_splits)]
-    fold_label_column = []
 
     for class_label in range(num_classes):
-      # get indices for current class
-      class_indices = y.squeeze() == class_label  
+      # get indices for current class using encoded labels to support non-zero-indexed labels
+      class_indices = encoded_labels == class_label
       samples_to_split = class_indices.sum()
 
       # iterate while there are enough samples in the class to split into folds
       while samples_to_split >= self.n_splits:
-        # identify unused samples in current class
-        # and get pivot sample
+        # identify unused samples in current class and get pivot sample
         considered_indices = (~used_indices) & class_indices
-        sum_distances = np.sum(distances[:, considered_indices], axis=1)
+        sum_distances = np.nansum(distances[:, considered_indices], axis=1)
         sum_distances[~considered_indices] = np.inf
         # smallest distance sum is chosen to be pivot sample
         pivot_idx = np.argpartition(sum_distances, 0)[0]
 
         used_indices[pivot_idx] = True
+        # exclude pivot from consideration via the same mechanism as other selected samples
+        considered_indices[pivot_idx] = False
         nearby_samples = [pivot_idx]
 
         # find N-1 similar samples
         for fold_idx in range(1, self.n_splits):
-          sum_distances = np.sum(distances[:, nearby_samples], axis=1)
+          sum_distances = np.nansum(distances[:, nearby_samples], axis=1)
           sum_distances[~considered_indices] = np.inf
           sum_distances[pivot_idx] = np.inf
 
           closest_sample_idx = np.argpartition(sum_distances, 0)[0]
           nearby_samples.append(closest_sample_idx)
-          
+
           # mark index in mask arrays as used and considered
           used_indices[closest_sample_idx] = True
           considered_indices[closest_sample_idx] = False
 
-        fold_label_column.append(class_label)
         # shuffle for stochasticity when appending to splits
-        np.random.shuffle(nearby_samples)  
+        np.random.shuffle(nearby_samples)
 
         for fold_idx in range(self.n_splits):
           folds_list[fold_idx].append(nearby_samples[fold_idx])
@@ -150,7 +181,6 @@ class SimilarityStratifiedSplit:
         samples_to_split -= self.n_splits
 
     folds = np.array(folds_list)
-    fold_label_column = np.array(fold_label_column)
 
     for fold_idx in range(self.n_splits):
       train_splits = np.ones(self.n_splits).astype(bool)
