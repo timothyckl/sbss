@@ -19,7 +19,9 @@ class TestSimilarityStratifiedSplit:
         assert splitter.shuffle is False
 
         # verify explicit shuffle=True is stored correctly
-        splitter_shuffled = SimilarityStratifiedSplit(n_splits=3, dist_func=sample_dist_func, shuffle=True)
+        splitter_shuffled = SimilarityStratifiedSplit(
+            n_splits=3, dist_func=sample_dist_func, shuffle=True
+        )
         assert splitter_shuffled.shuffle is True
 
     @staticmethod
