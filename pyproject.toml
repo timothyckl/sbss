@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sbss"
-version = "0.0.6"
+version = "0.0.7"
 description = "Similarity-Based Stratified Splitting Algorithm"
 readme = "README.md"
 license = { text = "MIT" }
