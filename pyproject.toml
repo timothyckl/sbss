@@ -22,7 +22,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest==7.4.3", "scipy", "scikit-learn"]
+dev = ["pytest==7.4.3", "scipy", "scikit-learn", "black"]
 
 [project.urls]
 Homepage = "https://github.com/timothyckl/similarity-stratified-split"
@@ -31,3 +31,7 @@ Homepage = "https://github.com/timothyckl/similarity-stratified-split"
 where = ["."]
 include = ["sbss*"]
 exclude = ["sbss.egg-info*"]
+
+[tool.black]
+line-length = 100
+skip-string-normalization = true
