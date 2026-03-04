@@ -44,6 +44,20 @@ for train_index, test_index in s.split(X, y):
   print("="*100)
 ```
 
+## sklearn Compatibility
+
+`SimilarityStratifiedSplit` is compatible with sklearn's cross-validation utilities. It can be passed directly to `cross_val_score`, `GridSearchCV`, and similar tools:
+
+```python
+from sklearn.model_selection import cross_val_score
+from sklearn.svm import SVC
+
+splitter = SimilarityStratifiedSplit(n_splits=3, dist_func=get_distances)
+cv_scores = cross_val_score(SVC(), X, y, cv=splitter)
+```
+
+Note that `y` is always required by the SBSS algorithm — passing `y=None` will raise a `ValueError`.
+
 ## References
 
 - Farias, F., Ludermir, T. and Bastos-Filho, C. (2020) Similarity based stratified splitting: An approach to train better classifiers, arXiv.org. Available at: https://arxiv.org/abs/2010.06099 (Accessed: 27 November 2023). 

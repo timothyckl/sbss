@@ -103,3 +103,49 @@ class TestSimilarityStratifiedSplit:
         # verify all indices are covered across test splits
         all_test_indices = np.concatenate([test for _, test in splits])
         assert len(np.unique(all_test_indices)) == len(X)
+
+    @staticmethod
+    def test_get_n_splits_accepts_sklearn_kwargs():
+        # verify sklearn-style keyword arguments are accepted without error
+        splitter = SimilarityStratifiedSplit(n_splits=3, dist_func=sample_dist_func)
+        X = np.array([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]])
+        y = np.array([0, 1, 0, 1, 0, 1])
+        assert splitter.get_n_splits(X=X, y=y, groups=None) == 3
+        # verify zero-arg form still works as before
+        assert splitter.get_n_splits() == 3
+
+    @staticmethod
+    def test_split_accepts_groups_kwarg():
+        # verify groups=None keyword argument is accepted without error
+        splitter = SimilarityStratifiedSplit(n_splits=2, dist_func=sample_dist_func)
+        X = np.array([[1, 2], [3, 4], [5, 6], [7, 8]])
+        y = np.array([0, 1, 0, 1])
+        splits = list(splitter.split(X, y, groups=None))
+        assert len(splits) == 2
+        for train_indices, test_indices in splits:
+            assert len(np.intersect1d(train_indices, test_indices)) == 0
+
+    @staticmethod
+    def test_split_raises_on_none_y():
+        # verify a clear error is raised when y is omitted (as required by sbss)
+        splitter = SimilarityStratifiedSplit(n_splits=2, dist_func=sample_dist_func)
+        X = np.array([[1, 2], [3, 4], [5, 6], [7, 8]])
+        with pytest.raises(ValueError, match="y is required by the SBSS algorithm"):
+            next(splitter.split(X))
+
+    @staticmethod
+    def test_cross_val_score_integration():
+        sklearn_model_selection = pytest.importorskip("sklearn.model_selection")
+        sklearn_dummy = pytest.importorskip("sklearn.dummy")
+
+        cross_val_score = sklearn_model_selection.cross_val_score
+        DummyClassifier = sklearn_dummy.DummyClassifier
+
+        n_splits = 2
+        splitter = SimilarityStratifiedSplit(n_splits=n_splits, dist_func=sample_dist_func)
+        X = np.array([[1, 2], [3, 4], [5, 6], [7, 8]])
+        y = np.array([0, 1, 0, 1])
+
+        # verify cross_val_score runs end-to-end with our splitter
+        scores = cross_val_score(DummyClassifier(), X, y, cv=splitter)
+        assert len(scores) == n_splits
