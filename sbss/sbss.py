@@ -1,73 +1,57 @@
 import warnings
 import numpy as np
+from collections.abc import Iterator
 from typing import Callable
 from numpy.typing import NDArray
 
 class SimilarityStratifiedSplit:
-  """
-  SBSS (Similarity Based Stratified Splitting: https://arxiv.org/abs/2010.06099) considers both
+  """SBSS (Similarity Based Stratified Splitting: https://arxiv.org/abs/2010.06099) considers both
   input and output space to create splits, unlike conventional stratified methods that focus solely
   on output distribution. By grouping similar samples within the same label into separate splits,
   SBSS ensures balanced partitions covering diverse dataset regions while maintaining approximately
   equal input and output distribution across all splits.
 
-  Parameters
-  ----------
-  n_splits : int
-      Number of splits to generate.
-  dist_func : callable
-      Function to compute distances between samples.
-  shuffle : bool, optional
-      Whether to shuffle the dataset before splitting. Default is False.
+  Args:
+      n_splits: Number of splits to generate.
+      dist_func: Function to compute pairwise distances between samples.
+      shuffle: Whether to shuffle the dataset before splitting. Defaults to False.
 
-  Notes
-  -----
-  This class is compatible with sklearn's cross-validation utilities (e.g. ``cross_val_score``,
-  ``GridSearchCV``). The ``get_n_splits`` and ``split`` methods accept the standard sklearn
-  ``X``, ``y``, and ``groups`` keyword arguments, though ``groups`` is ignored by the algorithm.
+  Note:
+      Compatible with sklearn's cross-validation utilities (e.g. ``cross_val_score``,
+      ``GridSearchCV``). The ``get_n_splits`` and ``split`` methods accept the standard
+      sklearn ``X``, ``y``, and ``groups`` keyword arguments, though ``groups`` is ignored.
   """
-  def __init__(self, n_splits: int, dist_func: Callable, shuffle: bool = False) -> None:
+  def __init__(self, n_splits: int, dist_func: Callable[[NDArray], NDArray], shuffle: bool = False) -> None:
     self.n_splits = n_splits
     self.dist_func = dist_func
     self.shuffle = shuffle
 
   def get_n_splits(self, X=None, y=None, groups=None) -> int:
-    """
-    Returns the number of splitting iterations for cross-validation.
+    """Returns the number of splitting iterations for cross-validation.
 
-    Parameters
-    ----------
-    X : ignored
-        Not used, present for sklearn API compatibility.
-    y : ignored
-        Not used, present for sklearn API compatibility.
-    groups : ignored
-        Not used, present for sklearn API compatibility.
+    Args:
+        X: Ignored. Present for sklearn API compatibility.
+        y: Ignored. Present for sklearn API compatibility.
+        groups: Ignored. Present for sklearn API compatibility.
 
-    Returns
-    -------
-    int
-        The number of splits.
+    Returns:
+        Number of splits.
     """
     return self.n_splits
 
-  def _validate(self, class_counts: NDArray, min_samples_per_class: int):
-    """
-    Validates parameters for stratified splitting.
+  def _validate(self, class_counts: NDArray, min_samples_per_class: int) -> None:
+    """Validates parameters for stratified splitting.
 
-    Parameters
-    ----------
-    class_counts : array-like
-        Number of samples for each class.
-    min_samples_per_class : int
-        Minimum number of samples per class.
+    Args:
+        class_counts: Number of samples for each class.
+        min_samples_per_class: Minimum number of samples per class.
 
-    Raises
-    ----------
-    ValueError
-        If the number of folds is greater than the number of members in any class.
-    Warning
-        If the least populated class has fewer samples than the specified number of folds.
+    Raises:
+        ValueError: If n_splits exceeds the number of members in any class.
+
+    Note:
+        Emits a UserWarning if the least populated class has fewer samples
+        than n_splits.
     """
     if np.any(self.n_splits > class_counts):
         raise ValueError("Number of folds cannot be greater than the number of members in each class.")
@@ -77,22 +61,18 @@ class SimilarityStratifiedSplit:
                       f"which is less than the specified number of folds: {self.n_splits}")
 
   def _encode_labels(self, y: NDArray) -> tuple[int, NDArray]:
-    """
-    Encodes the labels in 'y' ensuring classes are indexed by order of first appearance.
-    It calculates the number of unique classes, the count of samples per class, and validates
-    the encoded classes' distribution.
+    """Encodes labels in y ensuring classes are indexed by order of first appearance.
 
-    Parameters
-    ----------
-    y : array-like of shape (n_samples,)
-        Target labels to be encoded.
+    Calculates the number of unique classes, the count of samples per class, and
+    validates the encoded classes' distribution.
 
-    Returns
-    ----------
-    num_classes : int
-        The number of unique classes in 'y' after encoding.
-    encoded_labels : NDArray
-        The encoded labels array with classes indexed by order of first appearance.
+    Args:
+        y: Target labels of shape (n_samples,).
+
+    Returns:
+        Tuple of (num_classes, encoded_labels) where num_classes is the number of
+        unique classes and encoded_labels is the array with classes re-indexed by
+        order of first appearance.
     """
     # default checking from scikitlearn kfold
     _, labels_idx, labels_inverse = np.unique(y, return_index=True, return_inverse=True)
@@ -108,52 +88,32 @@ class SimilarityStratifiedSplit:
     return num_classes, encoded_labels
 
   def _shuffle_dataset(self, X: NDArray, y: NDArray) -> tuple[NDArray, NDArray]:
-    """
-    Shuffles the dataset by applying a random permutation to both X and y.
+    """Shuffles the dataset by applying a random permutation to both X and y.
 
-    Parameters
-    ----------
-    X : array-like of shape (n_samples, n_features)
-        Input features.
-    y : array-like of shape (n_samples,)
-        Target labels.
+    Args:
+        X: Input features of shape (n_samples, n_features).
+        y: Target labels of shape (n_samples,).
 
-    Returns
-    ----------
-    X_shuffled : NDArray
-        Shuffled input features.
-    y_shuffled : NDArray
-        Shuffled target labels.
+    Returns:
+        Tuple of (X_shuffled, y_shuffled) with a consistent permutation applied.
     """
     # generate a single permutation and apply it consistently to both arrays
     permutation = np.random.permutation(len(y))
     return X[permutation], y[permutation]
 
-  def split(self, X: NDArray, y: NDArray = None, groups=None):
-    """
-    Generate indices to split data into training and test set.
+  def split(self, X: NDArray, y: NDArray = None, groups=None) -> Iterator[tuple[NDArray, NDArray]]:
+    """Generates indices to split data into training and test sets.
 
-    Parameters
-    ----------
-    X : array-like of shape (n_samples, n_features)
-        Training data, where `n_samples` is the number of samples
-        and `n_features` is the number of features.
-    y : array-like of shape (n_samples,)
-        The target variable for supervised learning problems.
-    groups : ignored
-        Not used, present for sklearn API compatibility.
+    Args:
+        X: Input features of shape (n_samples, n_features).
+        y: Target labels of shape (n_samples,).
+        groups: Ignored. Present for sklearn API compatibility.
 
-    Yields
-    ------
-    train_indices : ndarray
-        The training set indices for that split.
-    test_indices : ndarray
-        The testing set indices for that split.
+    Yields:
+        Tuple of (train_indices, test_indices) as 1-D integer arrays.
 
-    Raises
-    ------
-    ValueError
-        If ``y`` is ``None``, since target labels are required by the SBSS algorithm.
+    Raises:
+        ValueError: If y is None, since target labels are required by the SBSS algorithm.
     """
     if y is None:
         raise ValueError(
