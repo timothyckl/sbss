@@ -22,7 +22,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest==7.4.3", "scipy"]
+dev = ["pytest==7.4.3", "scipy", "scikit-learn"]
 
 [project.urls]
 Homepage = "https://github.com/timothyckl/similarity-stratified-split"

@@ -19,14 +19,36 @@ class SimilarityStratifiedSplit:
       Function to compute distances between samples.
   shuffle : bool, optional
       Whether to shuffle the dataset before splitting. Default is False.
+
+  Notes
+  -----
+  This class is compatible with sklearn's cross-validation utilities (e.g. ``cross_val_score``,
+  ``GridSearchCV``). The ``get_n_splits`` and ``split`` methods accept the standard sklearn
+  ``X``, ``y``, and ``groups`` keyword arguments, though ``groups`` is ignored by the algorithm.
   """
   def __init__(self, n_splits: int, dist_func: Callable, shuffle: bool = False) -> None:
     self.n_splits = n_splits
     self.dist_func = dist_func
     self.shuffle = shuffle
 
-  def get_n_splits(self) -> int:
-    """Returns the number of splitting iterations for cross-validation"""
+  def get_n_splits(self, X=None, y=None, groups=None) -> int:
+    """
+    Returns the number of splitting iterations for cross-validation.
+
+    Parameters
+    ----------
+    X : ignored
+        Not used, present for sklearn API compatibility.
+    y : ignored
+        Not used, present for sklearn API compatibility.
+    groups : ignored
+        Not used, present for sklearn API compatibility.
+
+    Returns
+    -------
+    int
+        The number of splits.
+    """
     return self.n_splits
 
   def _validate(self, class_counts: NDArray, min_samples_per_class: int):
@@ -107,7 +129,7 @@ class SimilarityStratifiedSplit:
     permutation = np.random.permutation(len(y))
     return X[permutation], y[permutation]
 
-  def split(self, X: NDArray, y: NDArray):
+  def split(self, X: NDArray, y: NDArray = None, groups=None):
     """
     Generate indices to split data into training and test set.
 
@@ -116,18 +138,29 @@ class SimilarityStratifiedSplit:
     X : array-like of shape (n_samples, n_features)
         Training data, where `n_samples` is the number of samples
         and `n_features` is the number of features.
-
     y : array-like of shape (n_samples,)
         The target variable for supervised learning problems.
+    groups : ignored
+        Not used, present for sklearn API compatibility.
 
     Yields
     ------
     train_indices : ndarray
-      The training set indices for that split.
-
+        The training set indices for that split.
     test_indices : ndarray
-          The testing set indices for that split.
+        The testing set indices for that split.
+
+    Raises
+    ------
+    ValueError
+        If ``y`` is ``None``, since target labels are required by the SBSS algorithm.
     """
+    if y is None:
+        raise ValueError(
+            "y is required by the SBSS algorithm and cannot be None. "
+            "Provide target labels as a 1-D array of shape (n_samples,)."
+        )
+
     # shuffle dataset before processing if requested
     if self.shuffle is True:
       X, y = self._shuffle_dataset(X, y)
